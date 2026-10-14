@@ -9,22 +9,223 @@
     <button class="dashboard__logout" type="button" (click)="logout()">Cerrar sesión</button>
   </header>
 
-  <section class="dashboard__grid">
-    <article class="card">
-      <h2 class="card__title">Empleados</h2>
-      <p class="card__text">Gestiona los empleados de la organización.</p>
-    </article>
-    <article class="card">
-      <h2 class="card__title">Asistencia</h2>
-      <p class="card__text">Consulta y administra los registros de asistencia.</p>
-    </article>
-    <article class="card">
-      <h2 class="card__title">Permisos</h2>
-      <p class="card__text">Aprueba o rechaza las solicitudes de permiso.</p>
-    </article>
-    <article class="card">
-      <h2 class="card__title">Horarios</h2>
-      <p class="card__text">Configura turnos y horarios del personal.</p>
-    </article>
+  @if (message()) {
+    <p class="alert alert--success">{{ message() }}</p>
+  }
+  @if (error()) {
+    <p class="alert alert--error">{{ error() }}</p>
+  }
+
+  <section class="panel">
+    <div class="panel__head">
+      <h2 class="panel__title">Empleados</h2>
+      <span class="panel__count">{{ usuarios().length }}</span>
+    </div>
+    @if (usuarios().length === 0) {
+      <p class="panel__empty">No hay empleados registrados.</p>
+    } @else {
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Rol</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (usuario of usuarios(); track usuario.id) {
+            <tr>
+              <td>{{ usuario.id }}</td>
+              <td>{{ usuario.nombres }} {{ usuario.apellidos }}</td>
+              <td>{{ usuario.email }}</td>
+              <td>{{ usuario.rolNombre }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </section>
+
+  <section class="panel">
+    <div class="panel__head">
+      <h2 class="panel__title">Asistencia</h2>
+      <button class="btn btn--ghost" type="button" (click)="cargarTodo()">Actualizar</button>
+    </div>
+    @if (asistencias().length === 0) {
+      <p class="panel__empty">No hay registros de asistencia.</p>
+    } @else {
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Empleado</th>
+            <th>Fecha</th>
+            <th>Entrada</th>
+            <th>Ini. refrigerio</th>
+            <th>Fin refrigerio</th>
+            <th>Salida</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (asistencia of asistencias(); track asistencia.id) {
+            <tr>
+              <td>{{ asistencia.usuario }}</td>
+              <td>{{ asistencia.fecha }}</td>
+              <td>{{ asistencia.horaEntrada ?? '—' }}</td>
+              <td>{{ asistencia.horaIniRefrigerio ?? '—' }}</td>
+              <td>{{ asistencia.horaFinRefrigerio ?? '—' }}</td>
+              <td>{{ asistencia.horaSalida ?? '—' }}</td>
+              <td>
+                <span class="badge" [class.badge--ok]="asistencia.estado === 'COMPLETA'"
+                      [class.badge--warn]="asistencia.estado === 'INCOMPLETA'"
+                      [class.badge--danger]="asistencia.estado === 'AUSENTE'">
+                  {{ asistencia.estado }}
+                </span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </section>
+
+  <section class="panel">
+    <div class="panel__head">
+      <h2 class="panel__title">Permisos pendientes</h2>
+      <span class="panel__count">{{ permisos().length }}</span>
+    </div>
+    @if (permisos().length === 0) {
+      <p class="panel__empty">No hay solicitudes pendientes.</p>
+    } @else {
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Empleado</th>
+            <th>Tipo</th>
+            <th>Desde</th>
+            <th>Hasta</th>
+            <th>Motivo</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (permiso of permisos(); track permiso.id) {
+            <tr>
+              <td>{{ permiso.usuario }}</td>
+              <td>{{ permiso.tipo }}</td>
+              <td>{{ permiso.fechaInicio }}</td>
+              <td>{{ permiso.fechaFin }}</td>
+              <td>{{ permiso.motivo ?? '—' }}</td>
+              <td class="table__actions">
+                <button class="btn btn--ok" type="button" (click)="resolver(permiso, 'APROBADO')">
+                  Aprobar
+                </button>
+                <button class="btn btn--danger" type="button" (click)="resolver(permiso, 'RECHAZADO')">
+                  Rechazar
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </section>
+
+  <section class="panel">
+    <h2 class="panel__title">Horarios</h2>
+
+    <form class="form" [formGroup]="turnoForm" (ngSubmit)="crearTurno()">
+      <h3 class="form__title">Nuevo turno</h3>
+      <div class="form__row">
+        <label class="form__field">
+          <span>Nombre</span>
+          <input type="text" formControlName="nombre" placeholder="Mañana" />
+        </label>
+        <label class="form__field">
+          <span>Entrada</span>
+          <input type="time" formControlName="horaEntrada" />
+        </label>
+        <label class="form__field">
+          <span>Salida</span>
+          <input type="time" formControlName="horaSalida" />
+        </label>
+        <label class="form__field">
+          <span>Ini. refrigerio</span>
+          <input type="time" formControlName="horaIniRefrigerio" />
+        </label>
+        <label class="form__field">
+          <span>Fin refrigerio</span>
+          <input type="time" formControlName="horaFinRefrigerio" />
+        </label>
+        <button class="btn btn--primary" type="submit">Crear turno</button>
+      </div>
+    </form>
+
+    <form class="form" [formGroup]="asignarForm" (ngSubmit)="asignar()">
+      <h3 class="form__title">Asignar horario</h3>
+      <div class="form__row">
+        <label class="form__field">
+          <span>Empleado</span>
+          <select formControlName="usuarioId">
+            <option [value]="0" disabled>Selecciona...</option>
+            @for (usuario of usuarios(); track usuario.id) {
+              <option [value]="usuario.id">{{ usuario.nombres }} {{ usuario.apellidos }}</option>
+            }
+          </select>
+        </label>
+        <label class="form__field">
+          <span>Turno</span>
+          <select formControlName="turnoId">
+            <option [value]="0" disabled>Selecciona...</option>
+            @for (turno of turnos(); track turno.id) {
+              <option [value]="turno.id">{{ turno.nombre }}</option>
+            }
+          </select>
+        </label>
+        <label class="form__field">
+          <span>Día</span>
+          <select formControlName="diaSemana">
+            @for (dia of dias; track dia) {
+              <option [value]="dia">{{ dia }}</option>
+            }
+          </select>
+        </label>
+        <button class="btn btn--primary" type="submit">Asignar</button>
+      </div>
+    </form>
+
+    <div class="panel__grid">
+      <div>
+        <h3 class="form__title">Turnos</h3>
+        @if (turnos().length === 0) {
+          <p class="panel__empty">Sin turnos.</p>
+        } @else {
+          <ul class="list">
+            @for (turno of turnos(); track turno.id) {
+              <li class="list__item">
+                <strong>{{ turno.nombre }}</strong>
+                <span>{{ turno.horaEntrada }} - {{ turno.horaSalida }}</span>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+      <div>
+        <h3 class="form__title">Asignaciones</h3>
+        @if (asignaciones().length === 0) {
+          <p class="panel__empty">Sin asignaciones.</p>
+        } @else {
+          <ul class="list">
+            @for (asignacion of asignaciones(); track asignacion.id) {
+              <li class="list__item">
+                <strong>{{ asignacion.usuario }}</strong>
+                <span>{{ asignacion.turno }} · {{ asignacion.diaSemana }}</span>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </div>
   </section>
 </div>

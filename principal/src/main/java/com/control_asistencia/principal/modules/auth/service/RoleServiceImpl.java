@@ -30,6 +30,9 @@ public class RoleServiceImpl implements RoleService {
 		if (request == null || request.name() == null || request.name().isBlank()) {
 			throw new IllegalArgumentException("El nombre del rol es obligatorio");
 		}
+		if (roleRepository.existsByNameIgnoreCase(request.name())) {
+			throw new IllegalArgumentException("Ya existe un rol con el nombre " + request.name());
+		}
 		Role role = roleRepository.save(new Role(null, request.name()));
 		return RoleResponse.from(role);
 	}

@@ -15,3 +15,12 @@ export interface AuthResponse {
 export interface Session extends AuthResponse {
   exp?: number;
 }
+
+export interface User {
+  id: number;
+  nombres: string;
+  apellidos: string;
+  email: string;
+  rolId: number | null;
+  rolNombre: string | null;
+}

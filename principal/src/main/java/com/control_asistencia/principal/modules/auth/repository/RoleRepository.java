@@ -6,4 +6,6 @@ import com.control_asistencia.principal.modules.auth.model.Role;
 
 public interface RoleRepository extends JpaRepository<Role, Long> {
 
+	boolean existsByNameIgnoreCase(String name);
+
 }

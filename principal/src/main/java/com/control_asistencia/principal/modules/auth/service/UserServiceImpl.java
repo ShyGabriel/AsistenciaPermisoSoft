@@ -2,8 +2,10 @@ package com.control_asistencia.principal.modules.auth.service;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.control_asistencia.principal.common.exception.ResourceNotFoundException;
 import com.control_asistencia.principal.modules.auth.dto.CreateUserRequest;
@@ -52,7 +54,8 @@ public class UserServiceImpl implements UserService {
 			throw new IllegalArgumentException("El identificador del rol es obligatorio");
 		}
 		if (userRepository.findByEmailIgnoreCase(request.email()).isPresent()) {
-			throw new IllegalArgumentException("Ya existe un usuario con el email " + request.email());
+			throw new ResponseStatusException(HttpStatus.CONFLICT,
+					"Ya existe un usuario con el email " + request.email());
 		}
 		Role role = roleRepository.findById(request.roleId())
 				.orElseThrow(() -> new ResourceNotFoundException(

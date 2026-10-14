@@ -9,22 +9,119 @@
     <button class="dashboard__logout" type="button" (click)="logout()">Cerrar sesión</button>
   </header>
 
-  <section class="dashboard__grid">
-    <article class="card">
-      <h2 class="card__title">Registrar marca</h2>
-      <p class="card__text">Marca tu entrada, refrigerio o salida del día.</p>
-    </article>
-    <article class="card">
-      <h2 class="card__title">Mi asistencia</h2>
-      <p class="card__text">Revisa tus registros y resumen de asistencia.</p>
-    </article>
-    <article class="card">
-      <h2 class="card__title">Solicitar permiso</h2>
-      <p class="card__text">Envía una nueva solicitud de permiso.</p>
-    </article>
-    <article class="card">
-      <h2 class="card__title">Mis permisos</h2>
-      <p class="card__text">Consulta el estado de tus solicitudes.</p>
-    </article>
+  @if (message()) {
+    <p class="alert alert--success">{{ message() }}</p>
+  }
+  @if (error()) {
+    <p class="alert alert--error">{{ error() }}</p>
+  }
+
+  <section class="panel">
+    <h2 class="panel__title">Registrar marca</h2>
+    <div class="actions">
+      @for (marca of marcas; track marca.tipo) {
+        <button class="btn btn--primary" type="button" (click)="registrarMarca(marca.tipo)">
+          {{ marca.label }}
+        </button>
+      }
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel__head">
+      <h2 class="panel__title">Mi asistencia</h2>
+      <button class="btn btn--ghost" type="button" (click)="cargarResumen()">Actualizar</button>
+    </div>
+    @if (resumen(); as r) {
+      <div class="stats">
+        <div class="stat">
+          <span class="stat__value">{{ r.diasRegistrados }}</span>
+          <span class="stat__label">Días registrados</span>
+        </div>
+        <div class="stat">
+          <span class="stat__value">{{ r.completos }}</span>
+          <span class="stat__label">Completos</span>
+        </div>
+        <div class="stat">
+          <span class="stat__value">{{ r.incompletos }}</span>
+          <span class="stat__label">Incompletos</span>
+        </div>
+        <div class="stat">
+          <span class="stat__value">{{ r.ausentes }}</span>
+          <span class="stat__label">Ausentes</span>
+        </div>
+      </div>
+    } @else {
+      <p class="panel__empty">Aún no hay datos de asistencia.</p>
+    }
+  </section>
+
+  <section class="panel">
+    <h2 class="panel__title">Solicitar permiso</h2>
+    <form class="form" [formGroup]="permisoForm" (ngSubmit)="solicitar()">
+      <div class="form__row">
+        <label class="form__field">
+          <span>Tipo</span>
+          <select formControlName="idTipo">
+            <option [value]="0" disabled>Selecciona...</option>
+            @for (tipo of tipos(); track tipo.id) {
+              <option [value]="tipo.id">{{ tipo.nombre }}</option>
+            }
+          </select>
+        </label>
+        <label class="form__field">
+          <span>Desde</span>
+          <input type="date" formControlName="fechaInicio" />
+        </label>
+        <label class="form__field">
+          <span>Hasta</span>
+          <input type="date" formControlName="fechaFin" />
+        </label>
+        <label class="form__field form__field--grow">
+          <span>Motivo</span>
+          <input type="text" formControlName="motivo" placeholder="Motivo de la solicitud" />
+        </label>
+        <button class="btn btn--primary" type="submit">Enviar solicitud</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <div class="panel__head">
+      <h2 class="panel__title">Mis permisos</h2>
+      <button class="btn btn--ghost" type="button" (click)="cargarPermisos()">Actualizar</button>
+    </div>
+    @if (misPermisos().length === 0) {
+      <p class="panel__empty">No tienes solicitudes registradas.</p>
+    } @else {
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Desde</th>
+            <th>Hasta</th>
+            <th>Motivo</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (permiso of misPermisos(); track permiso.id) {
+            <tr>
+              <td>{{ permiso.tipo }}</td>
+              <td>{{ permiso.fechaInicio }}</td>
+              <td>{{ permiso.fechaFin }}</td>
+              <td>{{ permiso.motivo ?? '—' }}</td>
+              <td>
+                <span class="badge" [class.badge--ok]="permiso.estado === 'APROBADO'"
+                      [class.badge--warn]="permiso.estado === 'PENDIENTE'"
+                      [class.badge--danger]="permiso.estado === 'RECHAZADO'">
+                  {{ permiso.estado }}
+                </span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
   </section>
 </div>
