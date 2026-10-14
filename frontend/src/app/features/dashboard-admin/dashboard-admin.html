@@ -1,0 +1,30 @@
+<div class="dashboard">
+  <header class="dashboard__header">
+    <div>
+      <h1 class="dashboard__title">Panel de Administrador</h1>
+      <p class="dashboard__user">
+        Bienvenido, {{ session()?.nombre }} ({{ session()?.email }})
+      </p>
+    </div>
+    <button class="dashboard__logout" type="button" (click)="logout()">Cerrar sesión</button>
+  </header>
+
+  <section class="dashboard__grid">
+    <article class="card">
+      <h2 class="card__title">Empleados</h2>
+      <p class="card__text">Gestiona los empleados de la organización.</p>
+    </article>
+    <article class="card">
+      <h2 class="card__title">Asistencia</h2>
+      <p class="card__text">Consulta y administra los registros de asistencia.</p>
+    </article>
+    <article class="card">
+      <h2 class="card__title">Permisos</h2>
+      <p class="card__text">Aprueba o rechaza las solicitudes de permiso.</p>
+    </article>
+    <article class="card">
+      <h2 class="card__title">Horarios</h2>
+      <p class="card__text">Configura turnos y horarios del personal.</p>
+    </article>
+  </section>
+</div>
