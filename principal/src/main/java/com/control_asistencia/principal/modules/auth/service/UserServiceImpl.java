@@ -2,6 +2,7 @@ package com.control_asistencia.principal.modules.auth.service;
 
 import java.util.List;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.control_asistencia.principal.common.exception.ResourceNotFoundException;
@@ -17,41 +18,48 @@ public class UserServiceImpl implements UserService {
 
 	private final UserRepository userRepository;
 	private final RoleRepository roleRepository;
+	private final PasswordEncoder passwordEncoder;
 
-	public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository) {
+	public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository,
+			PasswordEncoder passwordEncoder) {
 		this.userRepository = userRepository;
 		this.roleRepository = roleRepository;
+		this.passwordEncoder = passwordEncoder;
 	}
 
 	@Override
 	public List<UserResponse> findAll() {
 		return userRepository.findAll().stream()
-				.map(this::toResponse)
+				.map(UserResponse::from)
 				.toList();
 	}
 
 	@Override
 	public UserResponse create(CreateUserRequest request) {
-		if (request == null || request.username() == null || request.username().isBlank()) {
-			throw new IllegalArgumentException("El nombre de usuario es obligatorio");
+		if (request == null || request.nombres() == null || request.nombres().isBlank()) {
+			throw new IllegalArgumentException("Los nombres son obligatorios");
+		}
+		if (request.apellidos() == null || request.apellidos().isBlank()) {
+			throw new IllegalArgumentException("Los apellidos son obligatorios");
+		}
+		if (request.email() == null || request.email().isBlank()) {
+			throw new IllegalArgumentException("El email es obligatorio");
+		}
+		if (request.password() == null || request.password().isBlank()) {
+			throw new IllegalArgumentException("La contraseña es obligatoria");
 		}
 		if (request.roleId() == null) {
 			throw new IllegalArgumentException("El identificador del rol es obligatorio");
 		}
+		if (userRepository.findByEmailIgnoreCase(request.email()).isPresent()) {
+			throw new IllegalArgumentException("Ya existe un usuario con el email " + request.email());
+		}
 		Role role = roleRepository.findById(request.roleId())
 				.orElseThrow(() -> new ResourceNotFoundException(
 						"Rol no encontrado con id " + request.roleId()));
-		User user = userRepository.save(new User(null, request.username(), role.getId()));
-		return toResponse(user, role);
-	}
-
-	private UserResponse toResponse(User user) {
-		Role role = roleRepository.findById(user.getRoleId()).orElse(null);
-		return toResponse(user, role);
-	}
-
-	private UserResponse toResponse(User user, Role role) {
-		return UserResponse.from(user, role);
+		User user = userRepository.save(new User(null, request.nombres(), request.apellidos(),
+				request.email(), passwordEncoder.encode(request.password()), role));
+		return UserResponse.from(user);
 	}
 
 }

@@ -8,12 +8,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.control_asistencia.principal.modules.auth.repository.RoleRepository;
+import com.control_asistencia.principal.modules.auth.repository.UserRepository;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -23,11 +24,15 @@ class RoleApiTest {
 	private MockMvc mockMvc;
 
 	@Autowired
+	private UserRepository userRepository;
+
+	@Autowired
 	private RoleRepository roleRepository;
 
 	@BeforeEach
 	void setUp() {
-		roleRepository.reset();
+		userRepository.deleteAll();
+		roleRepository.deleteAll();
 	}
 
 	@Test
@@ -44,7 +49,6 @@ class RoleApiTest {
 						.contentType(MediaType.APPLICATION_JSON)
 						.content("{\"name\":\"ADMIN\"}"))
 				.andExpect(status().isCreated())
-				.andExpect(jsonPath("$.id").value(1))
 				.andExpect(jsonPath("$.name").value("ADMIN"));
 	}
 
@@ -58,7 +62,6 @@ class RoleApiTest {
 		mockMvc.perform(get("/api/role"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.length()").value(1))
-				.andExpect(jsonPath("$[0].id").value(1))
 				.andExpect(jsonPath("$[0].name").value("ADMIN"));
 	}
 
