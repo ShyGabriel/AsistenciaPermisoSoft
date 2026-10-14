@@ -11,7 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.control_asistencia.principal.modules.auth.model.Role;
 import com.control_asistencia.principal.modules.auth.repository.RoleRepository;
@@ -19,6 +21,8 @@ import com.control_asistencia.principal.modules.auth.repository.UserRepository;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Transactional
+@WithMockUser(roles = "ADMIN")
 class UserApiTest {
 
 	@Autowired
@@ -86,6 +90,13 @@ class UserApiTest {
 						.contentType(MediaType.APPLICATION_JSON)
 						.content("{\"nombres\":\"\",\"apellidos\":\"Perez\",\"email\":\"juan@empresa.com\",\"password\":\"secret123\",\"roleId\":" + adminRoleId + "}"))
 				.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	@WithMockUser(roles = "EMPLEADO")
+	void getUsersWithoutAdminRoleReturnsForbidden() throws Exception {
+		mockMvc.perform(get("/api/user"))
+				.andExpect(status().isForbidden());
 	}
 
 }

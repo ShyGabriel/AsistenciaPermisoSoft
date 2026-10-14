@@ -11,13 +11,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.control_asistencia.principal.modules.auth.repository.RoleRepository;
 import com.control_asistencia.principal.modules.auth.repository.UserRepository;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Transactional
+@WithMockUser(roles = "ADMIN")
 class RoleApiTest {
 
 	@Autowired
@@ -71,6 +75,15 @@ class RoleApiTest {
 						.contentType(MediaType.APPLICATION_JSON)
 						.content("{\"name\":\"\"}"))
 				.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	@WithMockUser(roles = "EMPLEADO")
+	void createRoleWithoutAdminRoleReturnsForbidden() throws Exception {
+		mockMvc.perform(post("/api/role")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"name\":\"SUPERVISOR\"}"))
+				.andExpect(status().isForbidden());
 	}
 
 }

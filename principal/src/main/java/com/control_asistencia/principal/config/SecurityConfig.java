@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -22,6 +23,7 @@ import com.control_asistencia.principal.modules.auth.security.JwtAuthenticationF
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
 	private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -41,7 +43,7 @@ public class SecurityConfig {
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers("/api/auth/**").permitAll()
-						.requestMatchers("/api/role/**", "/api/user/**").permitAll()
+						.requestMatchers("/api/role/**", "/api/user/**").hasRole("ADMIN")
 						.requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
 						.anyRequest().authenticated())
 				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
