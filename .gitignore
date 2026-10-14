@@ -1,2 +1,14 @@
+# JDK local
 principal/oracleJdk-26/
-principal/oracleJdk-26/
+
+# Backend (Maven)
+principal/target/
+
+# Frontend (Angular / Node)
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+
+# Entorno
+.env
+*.local
