@@ -19,6 +19,8 @@ public interface PermisoRepository extends JpaRepository<Permiso, Long> {
 
 	List<Permiso> findAllByOrderByFechaCreacionDesc();
 
+	boolean existsByTipoId(Long tipoId);
+
 	@Query("SELECT COUNT(p) FROM Permiso p WHERE p.estado = :estado")
 	long contarPorEstado(@Param("estado") EstadoSolicitud estado);
 

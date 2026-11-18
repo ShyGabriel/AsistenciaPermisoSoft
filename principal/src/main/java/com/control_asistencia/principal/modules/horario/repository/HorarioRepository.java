@@ -16,4 +16,6 @@ public interface HorarioRepository extends JpaRepository<HorarioEmpleado, Long> 
 
 	List<HorarioEmpleado> findAllByOrderByIdAsc();
 
+	boolean existsByTurnoId(Long turnoId);
+
 }

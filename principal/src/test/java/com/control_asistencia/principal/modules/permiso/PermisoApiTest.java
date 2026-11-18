@@ -1,8 +1,10 @@
 package com.control_asistencia.principal.modules.permiso;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -113,6 +115,66 @@ class PermisoApiTest {
 		mockMvc.perform(get("/api/permiso").param("estado", "PENDIENTE"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.data.length()").value(1));
+	}
+
+	@Test
+	@WithMockUser(username = "admin@empresa.com", roles = "ADMIN")
+	void adminCrudTipoPermiso() throws Exception {
+		mockMvc.perform(post("/api/permiso/tipos")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"nombre\":\"Licencia\",\"descripcion\":\"Licencia especial\",\"diasMaximos\":5}"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.data.nombre").value("Licencia"));
+
+		TipoPermiso licencia = tipoPermisoRepository.findAll().stream()
+				.filter(t -> t.getNombre().equals("Licencia"))
+				.findFirst()
+				.orElseThrow();
+
+		mockMvc.perform(get("/api/permiso/tipos/" + licencia.getId()))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.data.nombre").value("Licencia"));
+
+		mockMvc.perform(put("/api/permiso/tipos/" + licencia.getId())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"nombre\":\"Licencia medica\",\"descripcion\":\"Licencia por salud\",\"diasMaximos\":10}"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.data.nombre").value("Licencia medica"))
+				.andExpect(jsonPath("$.data.diasMaximos").value(10));
+
+		mockMvc.perform(delete("/api/permiso/tipos/" + licencia.getId()))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.data.nombre").value("Licencia medica"));
+
+		org.junit.jupiter.api.Assertions.assertTrue(tipoPermisoRepository.findById(licencia.getId()).isEmpty());
+	}
+
+	@Test
+	@WithMockUser(username = "admin@empresa.com", roles = "ADMIN")
+	void deleteTipoPermisoWithSolicitudesReturnsConflict() throws Exception {
+		User usuario = userRepository.findByEmailIgnoreCase("juan@empresa.com").orElseThrow();
+		permisoRepository.save(new Permiso(usuario, tipo, LocalDate.parse("2026-10-20"),
+				LocalDate.parse("2026-10-22"), "Viaje"));
+
+		mockMvc.perform(delete("/api/permiso/tipos/" + tipo.getId()))
+				.andExpect(status().isConflict());
+	}
+
+	@Test
+	@WithMockUser(username = "juan@empresa.com", roles = "EMPLEADO")
+	void empleadoPuedeListarTipos() throws Exception {
+		mockMvc.perform(get("/api/permiso/tipos"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.data").isArray());
+	}
+
+	@Test
+	@WithMockUser(username = "juan@empresa.com", roles = "EMPLEADO")
+	void empleadoNoPuedeCrearTipoPermiso() throws Exception {
+		mockMvc.perform(post("/api/permiso/tipos")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"nombre\":\"Licencia\",\"diasMaximos\":5}"))
+				.andExpect(status().isForbidden());
 	}
 
 }

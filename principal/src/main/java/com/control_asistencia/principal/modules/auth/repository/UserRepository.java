@@ -12,7 +12,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 	Optional<User> findByEmailIgnoreCase(String email);
 
+	boolean existsByRolId(Long roleId);
+
 	@Query("SELECT COUNT(u) FROM User u WHERE u.rol.name = :rol")
 	long contarPorRol(@Param("rol") String rol);
+
+	@Query("SELECT COUNT(u) FROM User u WHERE u.rol.name = :rol AND u.estado = :estado")
+	long contarPorRolYEstado(@Param("rol") String rol, @Param("estado") Boolean estado);
 
 }

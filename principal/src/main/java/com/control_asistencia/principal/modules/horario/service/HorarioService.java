@@ -11,10 +11,22 @@ public interface HorarioService {
 
 	List<Turno> listarTurnos();
 
+	Turno buscarTurno(Long id);
+
 	Turno crearTurno(TurnoRequest request);
+
+	Turno actualizarTurno(Long id, TurnoRequest request);
+
+	Turno eliminarTurno(Long id);
 
 	List<HorarioEmpleado> listarAsignaciones();
 
+	HorarioEmpleado buscarAsignacion(Long id);
+
 	HorarioEmpleado asignar(AsignarHorarioRequest request);
+
+	HorarioEmpleado actualizarAsignacion(Long id, AsignarHorarioRequest request);
+
+	HorarioEmpleado eliminarAsignacion(Long id);
 
 }

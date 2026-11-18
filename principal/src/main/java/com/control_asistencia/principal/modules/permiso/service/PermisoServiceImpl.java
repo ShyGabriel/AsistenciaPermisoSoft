@@ -3,8 +3,10 @@ package com.control_asistencia.principal.modules.permiso.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.control_asistencia.principal.common.exception.ResourceNotFoundException;
 import com.control_asistencia.principal.common.util.DateUtils;
@@ -12,6 +14,7 @@ import com.control_asistencia.principal.modules.auth.model.User;
 import com.control_asistencia.principal.modules.auth.repository.UserRepository;
 import com.control_asistencia.principal.modules.permiso.dto.AprobarPermisoDTO;
 import com.control_asistencia.principal.modules.permiso.dto.SolicitudPermisoDTO;
+import com.control_asistencia.principal.modules.permiso.dto.TipoPermisoRequest;
 import com.control_asistencia.principal.modules.permiso.model.EstadoSolicitud;
 import com.control_asistencia.principal.modules.permiso.model.Permiso;
 import com.control_asistencia.principal.modules.permiso.model.TipoPermiso;
@@ -39,6 +42,43 @@ public class PermisoServiceImpl implements PermisoService {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
+	public TipoPermiso buscarTipo(Long id) {
+		return buscarTipoEntidad(id);
+	}
+
+	@Override
+	@Transactional
+	public TipoPermiso crearTipo(TipoPermisoRequest request) {
+		validarTipo(request);
+		TipoPermiso tipo = new TipoPermiso(null, request.nombre(), request.descripcion(), request.diasMaximos());
+		return tipoPermisoRepository.save(tipo);
+	}
+
+	@Override
+	@Transactional
+	public TipoPermiso actualizarTipo(Long id, TipoPermisoRequest request) {
+		validarTipo(request);
+		TipoPermiso tipo = buscarTipoEntidad(id);
+		tipo.setNombre(request.nombre());
+		tipo.setDescripcion(request.descripcion());
+		tipo.setDiasMaximos(request.diasMaximos());
+		return tipoPermisoRepository.save(tipo);
+	}
+
+	@Override
+	@Transactional
+	public TipoPermiso eliminarTipo(Long id) {
+		TipoPermiso tipo = buscarTipoEntidad(id);
+		if (permisoRepository.existsByTipoId(id)) {
+			throw new ResponseStatusException(HttpStatus.CONFLICT,
+					"No se puede eliminar el tipo de permiso porque tiene solicitudes asociadas");
+		}
+		tipoPermisoRepository.delete(tipo);
+		return tipo;
+	}
+
+	@Override
 	@Transactional
 	public Permiso solicitar(String email, SolicitudPermisoDTO dto) {
 		if (dto == null) {
@@ -48,8 +88,7 @@ public class PermisoServiceImpl implements PermisoService {
 			throw new IllegalArgumentException("El rango de fechas no es válido");
 		}
 		User usuario = buscarUsuario(email);
-		TipoPermiso tipo = tipoPermisoRepository.findById(dto.idTipo())
-				.orElseThrow(() -> new ResourceNotFoundException("Tipo de permiso no encontrado con id " + dto.idTipo()));
+		TipoPermiso tipo = buscarTipoEntidad(dto.idTipo());
 		Permiso permiso = new Permiso(usuario, tipo, dto.fechaInicio(), dto.fechaFin(), dto.motivo());
 		return permisoRepository.save(permiso);
 	}
@@ -86,6 +125,26 @@ public class PermisoServiceImpl implements PermisoService {
 		permiso.setAdminResponde(admin);
 		permiso.setFechaRespuesta(LocalDateTime.now());
 		return permisoRepository.save(permiso);
+	}
+
+	private void validarTipo(TipoPermisoRequest request) {
+		if (request == null) {
+			throw new IllegalArgumentException("El tipo de permiso no puede estar vacío");
+		}
+		if (request.nombre() == null || request.nombre().isBlank()) {
+			throw new IllegalArgumentException("El nombre del tipo de permiso es obligatorio");
+		}
+		if (request.diasMaximos() == null) {
+			throw new IllegalArgumentException("Los días máximos son obligatorios");
+		}
+		if (request.diasMaximos() < 0) {
+			throw new IllegalArgumentException("Los días máximos no pueden ser negativos");
+		}
+	}
+
+	private TipoPermiso buscarTipoEntidad(Long id) {
+		return tipoPermisoRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Tipo de permiso no encontrado con id " + id));
 	}
 
 	private User buscarUsuario(String email) {

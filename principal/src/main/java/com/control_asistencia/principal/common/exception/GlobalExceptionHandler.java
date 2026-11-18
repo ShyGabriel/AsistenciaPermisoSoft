@@ -1,5 +1,6 @@
 package com.control_asistencia.principal.common.exception;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -28,6 +29,12 @@ public class GlobalExceptionHandler {
 				.map(error -> error.getDefaultMessage())
 				.orElse("Datos de entrada inválidos");
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message);
+	}
+
+	@ExceptionHandler(DataIntegrityViolationException.class)
+	public ResponseEntity<String> handleDataIntegrity(DataIntegrityViolationException ex) {
+		return ResponseEntity.status(HttpStatus.CONFLICT)
+				.body("No se puede completar la operación porque existen datos relacionados");
 	}
 
 	@ExceptionHandler(AuthenticationException.class)

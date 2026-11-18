@@ -4,14 +4,18 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.control_asistencia.principal.modules.auth.dto.CreateRoleRequest;
 import com.control_asistencia.principal.modules.auth.dto.RoleResponse;
+import com.control_asistencia.principal.modules.auth.dto.UpdateRoleRequest;
 import com.control_asistencia.principal.modules.auth.service.RoleService;
 
 @RestController
@@ -29,10 +33,25 @@ public class RoleController {
 		return roleService.findAll();
 	}
 
+	@GetMapping("/{id}")
+	public RoleResponse getById(@PathVariable Long id) {
+		return roleService.findById(id);
+	}
+
 	@PostMapping
 	public ResponseEntity<RoleResponse> create(@RequestBody CreateRoleRequest request) {
 		RoleResponse created = roleService.create(request);
 		return ResponseEntity.status(HttpStatus.CREATED).body(created);
+	}
+
+	@PutMapping("/{id}")
+	public RoleResponse update(@PathVariable Long id, @RequestBody UpdateRoleRequest request) {
+		return roleService.update(id, request);
+	}
+
+	@DeleteMapping("/{id}")
+	public RoleResponse delete(@PathVariable Long id) {
+		return roleService.delete(id);
 	}
 
 }
